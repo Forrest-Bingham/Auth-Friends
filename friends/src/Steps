@@ -1,0 +1,160 @@
+Dependencies to add: Axios, react-router-dom
+Set up Server.js
+
+1. Create a route in App.js
+
+     <Router>
+      <div className="App">
+        <ul>
+          <li>
+            <Link to="/login">Login</Link>
+          </li>
+          <li>
+            <Link to="/friends">Friends Page</Link>
+          </li>
+        </ul>
+        <Switch>
+          <Route path="/login" component={Login} />
+          <Route component={Login} />
+        </Switch>
+      </div>
+    </Router>
+
+2. Create Login page component and form. 
+
+    class Login extends React.Component{
+
+state={
+    credentials: {
+        username:"",
+        password:"",
+    },
+    isFetching: false
+};
+
+render(){
+    return(
+        <div>
+            <form onSubmit={this.login}>
+                <input 
+                type="text"
+                name="username"
+                value={}
+                onChange={this.handleChange}
+                />
+                <input
+                type="password"
+                name="password"
+                value={}
+                onChange={}
+                />
+                <button>Log In</button>
+                {this.state.isFetching && 'Logging in! '}
+            </form>
+        </div>
+    )
+}
+
+}
+
+3. add handleChange function and assign the value to the form.
+
+        handleChange = e => {
+        this.setState({
+        credentials:{
+        ...this.setState.credentials,
+        [e.target.name]: e.target.value
+        }
+        })
+        }
+
+        value={this.state.credentials.username}
+        value={this.state.credentials.password}
+
+4. Create login function in login Component/
+
+    login = e => {
+    e.preventDefault();
+    this.setState({
+        isFetching: true
+    });
+    /*** INSERT axiosWithAuth function ****/
+}
+
+5. Create Util folder and create axiosWithAuth.js file.
+
+        import axios from 'axios';
+
+    export const axiosWithAuth = () => {
+    const token = localStorage.getItem('token');
+    return axios.create({
+        baseURL: 'http://localhost:5000/api',
+        headers: {
+        Authorization: token
+        }
+    });
+    };
+
+6. Go back to Login Component and finish Login function with axiosWithAuth();
+
+        login = e => {
+    e.preventDefault();
+    this.setState({
+      isFetching: true
+    });
+    axiosWithAuth()
+      .post("/login", this.state.credentials)
+      .then(res => {
+        localStorage.setItem('token', res.data.payload);
+        this.props.history.push('/protected');
+      })
+      .catch(err => console.log(err));
+  };
+
+  7. Create a PrivateRoute component to protect other routes.
+
+    import React from "react";
+    import {Route, Redirect } from "react-router-dom";
+
+    const PrivateRoute = ({ component: Component, ...rest }) => {
+    //setting whatever component = Component, spreading in the rest of the props with ...rest
+    return (
+        <Route 
+         {...rest}
+         render={props => {
+             if (localStorage.getItem('token')){
+                 return <Component/>;
+             } else {
+                 return <Redirect to="/login"/>
+             }
+         }}
+         />
+        )
+        }
+
+        export default PrivateRoute;
+
+8. Go back to App.js and Import PrivateRoute and apply it in Switch
+
+            function App() {
+        return (
+            <Router>
+            <div className="App">
+                <ul>
+                <li>
+                    <Link to="/login">Login</Link>
+                </li>
+                <li>
+                    <Link to="/friends">Friends Page</Link>
+                </li>
+                </ul>
+                <Switch>
+                <PrivateRoute path="/friends" component={Friends}/>
+                <Route path="/login" component={Login} />
+                </Switch>
+            </div>
+            </Router>
+        );
+        }
+
+        export default App;
