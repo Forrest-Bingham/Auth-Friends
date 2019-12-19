@@ -11,6 +11,7 @@ function App() {
   return (
     <Router>
       <div className="App">
+        <h1> Friends List!</h1>
         <ul>
           <li>
             <Link to="/login">Login</Link>
